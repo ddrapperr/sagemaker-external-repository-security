@@ -19,7 +19,7 @@ This solution covers three main topics:
 ### Overview
 
 <p align="center">
-  <img src="design/codeartifact-overview.svg">
+  <img src="design/solution-overview.svg">
   <em>Diagram 1: External Package Repository Security Scanning Using AWS CodePipeline, AWS CodeBuild, and AWS CodeArtifact</em>
 </p>
 
