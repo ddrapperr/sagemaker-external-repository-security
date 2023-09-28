@@ -51,7 +51,7 @@ aws codeartifact get-package-version-asset --domain codeartifact-domain \
 
 <p align="center">
   <img src="design/github-overview.svg">
-  <em>Diagram 2: External Package Repository Security Scanning Using AWS CodePipeline, AWS CodeBuild, and GitHub</em>
+  <em>Diagram 2: External Package Repository Security Scanning Using AWS CodePipeline, AWS CodeBuild, Amazon CodeGuru Security, and GitHub</em>
 </p>
 
 ## Multi-Account Configuration
