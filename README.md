@@ -10,7 +10,7 @@ This solution covers three main topics:
 ## Content
 - [Solution Architecture](#solution-architecture)
 - [Multi-Account Configuration](#multi-account-configuration)
-- [Deployment Guide](#deployment)
+- [Deployment Guide](#deployment-guide)
 - [Testing and Validation](#testing-and-validation)
 - [Clean Up](#clean-up)
 
