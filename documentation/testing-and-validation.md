@@ -47,6 +47,7 @@ git clone <https://github.com/<username>/<repo>.git)> <local-repo>
 cd <local-repo>
 git checkout <branch>
 vi <public-repo-request-file.csv>
+# Append your public package name and zip URL to public-repo-request-file.csv 
 git add <public-repo-request-file.csv>
 git commit -m "modified <public-repo-request-file.csv>"
 git push -u
@@ -56,7 +57,7 @@ git push -u
 
 ## CodePipeline Clones External Repository and Performs Security Scans
 
-CodePipeline is configured with custom source action that triggers based on the data scientist's commit to the webhook-enabled GitHub source repository. CodePipeline execution then orchestrates the CodeBuild project to clone the remote package repository so that an additional CodeBuild project can be used to perform security scans on the cloned repository artifact. You can view CodePipeline's execution status from the [CodePipeline console](https://docs.aws.amazon.com/codepipeline/latest/userguide/pipelines-view-console.html#pipelines-executions-status-console):
+CodePipeline is configured with a source action that triggers based on the data scientist's commit to the webhook-enabled GitHub source repository. CodePipeline execution then orchestrates the CodeBuild project to clone the remote package repository so that an additional CodeBuild project can be used to perform security scans on the cloned repository artifact. You can view CodePipeline's execution status from the [CodePipeline console](https://docs.aws.amazon.com/codepipeline/latest/userguide/pipelines-view-console.html#pipelines-executions-status-console):
 
 <p align="center">
   <img src="../img/pipeline-execution.png" width="310" height="975">
@@ -65,13 +66,13 @@ CodePipeline is configured with custom source action that triggers based on the 
   <em>Diagram 7: CodePipeline Execution Status</em>
 </p>
 
-❗ The security scanning software is not included in the Deployment Guide's CloudFormation deployment and testing validation because of required software licensing. Up to this point, the solution performs the initial external repository ingest, against which you can perform subsequent security scans.
+CodeGuru Security performs security and quality scans on the public package repository to detect vulnerabilities and return findings. The findings include information about security issues in the public package repository code, where the vulnerabilities are, and suggestions for how to remediate them. If the finding includes a code change, CodeGuru Security highlights the vulnerable lines of code to remove and suggests inline code fixes as replacements. For more information, see [Working with findings](https://docs.aws.amazon.com/codeguru/latest/security-ug/working-with-findings.html).
 
-In this case, the solution is expanded upon using a CodePipeline security test stage that receives the output artifact from our CodeBuild build stage. The security stage includes two actions for both the static analysis (Java API wrapper) and software composition analysis (agent-based) build projects. The scan results and severity findings for both actions are shown in the third-party platform's UI below:
+The CodeGuru Security Dashboard provides metrics to track the security posture of your public package repositories, including open critical findings, severity distribution of findings and trends over time for each resource. CodeGuru Security tracks the vulnerabilities and trends across multiple revisions of the same resource using the scan name provided when a scan is created:
 
 <p align="center">
-  <img src="../img/security-scan.svg">
-  <em>Diagram 8: Security Scan Findings Severity</em>
+  <img src="../img/codeguru.png">
+  <em>Diagram 8: Amazon CodeGuru Security - Security and Quality Scan Findings</em>
 </p>
 
 The security stage output is analyzed as part of the CodePipeline orchestration. If the security scans return severity findings greater than or equal to medium, then [stop-pipeline-execution](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/codepipeline/stop-pipeline-execution.html) is used to place CodePipeline into a _Stopping_ state and a [CodePipeline notification rule](https://docs.aws.amazon.com/codepipeline/latest/userguide/notification-rule-create.html) uses Amazon Simple Email Service (SES) to email the negative results to the requesting data scientist.
