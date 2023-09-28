@@ -1,4 +1,4 @@
-# External Package Repository Security: Amazon SageMaker, Amazon CodeGuru Security, AWS CodeArtifact, and AWS Code Services
+# External Package Repository Security: Amazon SageMaker, AWS CodeArtifact, Amazon CodeGuru Security, and AWS Code Services
 ---
 The goal of this solution is to demonstrate the deployment of AWS Code Services (e.g., [AWS CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/welcome.html), [AWS CodeBuild](https://docs.aws.amazon.com/codebuild/latest/userguide/welcome.html), [AWS CodePipeline](https://docs.aws.amazon.com/codepipeline/latest/userguide/welcome.html)) to orchestrate secure MLOps access to external package repositories in an [Amazon SageMaker](https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html) data science environment configured with multi-layer security.
 
