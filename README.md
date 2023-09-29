@@ -45,6 +45,13 @@ A CodeBuild project executes [CodeGuru Security security and quality scans](http
 **6, 7 – Security Results and Private Package Repository Management**  
 If the security scans return lower than medium severities, the _Security_Scan_Notify_ stage publishes a new _Latest_ package version to the private internal CodeArtifact package repository that was created during the initial solution deployment. If any of the findings severity is equal to or greater than medium, CodeBuild [stops the build](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codebuild/client/stop_build.html) and CodePipeline is set to a failed state. In either case, an [Amazon Simple Notification Service](https://docs.aws.amazon.com/sns/latest/dg/welcome.html) topic is used to email the results, positive or negative, to the requesting data scientist.
 
+<p align="center">
+  <img src="img/findings-email.png">
+</p>
+<p align="center">
+  <em>Figure 2: Amazon Simple Notification Service Email with Amazon CodeGuru Security Findings</em>
+</p>
+
 **8, 9 – MLOps Workflow**  
 The data scientist authenticates to their [Amazon SageMaker Studio](https://docs.aws.amazon.com/sagemaker/latest/dg/studio.html) domain via [AWS Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html) or [Identity and Access Management (IAM)](https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam.html) mode. Each auth-mode maps to the user profile’s associated execution role that defines the user’s maximum permissible notebook actions. SageMaker Studio runs on an environment managed by AWS. Studio provides an [elastic network interface (ENI)](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) that can be deployed into a customer-managed VPC for more granular control of notebook traffic. The data scientist executes their SageMaker Studio Notebook which installs the InfoSec validated external packages (e.g., NumPy) using the newly-created private internal repository endpoint:
 
