@@ -77,7 +77,7 @@ The stack (`external-repo-codeartifact.yaml`) provisions the following primary r
 
 CloudFormation prepopulates stack parameters with the default values provided in the template. To provide alternative input values, you can specify parameters via `ParameterKey=<ParameterKey>,ParameterValue=<Value>` pairs in the `aws cloudformation create-stack` call. 
 
-❗You are required to specify valid CloudFormation parameters for your prerequisite AWS resources (e.g., VPC, subnets, S3 bucket) and GitHub environment settings (e.g., GitHubBranch, GitHubOwner, GitHubRepo, GitHubToken) to be used for stack deployment. Set the corresponding CloudFormation parameters to the names, values, and resource IDs of your existing resources:
+❗You are required to specify valid CloudFormation parameters for your prerequisite AWS resources (e.g., VPC, subnets, S3 bucket) and GitHub environment settings (e.g., PrivateGitHubBranch, PrivateGitHubOwner, PrivateGitHubRepo, PrivateGitHubToken) to be used for stack deployment. Set the corresponding CloudFormation parameters to the names, values, and resource IDs of your existing resources:
 
 ```sh
 # Provide your own parameter values for CloudFormation stack and CodePipeline pipeline names
@@ -85,10 +85,10 @@ export STACK_NAME=<YOUR-STACK-NAME>
 export CODEPIPELINE_NAME=<YOUR-CODEPIPELINE-NAME>
 
 # Below parameter values acquired from 'Gather Third-Party Repository Configuration Settings' and 'Create GitHub Personal Access Token' pre-deployment
-export GITHUB_PAT=<YOUR-GITHUB-PAT>
-export GITHUB_BRANCH=<EXTERNAL-PACKAGE-REPOSITORY-BRANCH>
-export GITHUB_OWNER=<EXTERNAL-PACKAGE-REPOSITORY-OWNER>
-export GITHUB_REPO=<YOUR-PRIVATE-REPOSITORY-NAME>
+export PRIVATE_GITHUB_PAT=<YOUR-GITHUB-PAT>
+export PRIVATE_GITHUB_BRANCH=<YOUR-PRIVATE-REPOSITORY-BRANCH>
+export PRIVATE_GITHUB_OWNER=<YOUR-PRIVATE-REPOSITORY-OWNER>
+export PRIVATE_GITHUB_REPO=<YOUR-PRIVATE-REPOSITORY-NAME>
 
 # Below parameter values acquired from 'Establish VPC Networking Configuration' pre-deployment
 export CODEBUILD_VPC_ID=<YOUR-VPC-ID>
@@ -105,7 +105,7 @@ export PRIVATE_GITHUB_URL=<YOUR-PRIVATE-PACKAGE-REPOSITORY-URL>
 ```sh
 source ./create-codeartifact-stack.sh
 
-# To deploy external-repo-github.yaml stack execute the below:
+# (OPTIONAL) To deploy external-repo-github.yaml stack, execute the below:
 # source ./create-github-stack.sh
 ```
 
@@ -119,7 +119,7 @@ The above ```source ./create-codeartifact-stack.sh``` shell command executes the
 # chmod u+x create-codeartifact-stack.sh
 # source ./create-codeartifact-stack.sh
 
-export GITHUB_TOKEN_SECRET_NAME=$(aws secretsmanager create-secret --name $STACK_NAME-git-pat --secret-string $GITHUB_PAT --query Name --output text)
+export GITHUB_TOKEN_SECRET_NAME=$(aws secretsmanager create-secret --name $STACK_NAME-git --secret-string $GITHUB_PAT --query Name --output text)
 export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 export S3_ARTIFACT_BUCKET_NAME=${STACK_NAME}-${ACCOUNT_ID}
 
@@ -131,10 +131,11 @@ aws cloudformation create-stack \
 --parameters \
 ParameterKey=ArtifactStoreBucket,ParameterValue=${S3_ARTIFACT_BUCKET_NAME} \
 ParameterKey=CodePipelineName,ParameterValue=${CODEPIPELINE_NAME} \
-ParameterKey=GitHubBranch,ParameterValue=${GITHUB_BRANCH} \
-ParameterKey=GitHubOwner,ParameterValue=${GITHUB_OWNER} \
-ParameterKey=GitHubRepo,ParameterValue=${GITHUB_REPO} \
-ParameterKey=GitHubToken,ParameterValue=${GITHUB_TOKEN_SECRET_NAME} \
+ParameterKey=SNSEmail,ParameterValue=${SNS_EMAIL} \
+ParameterKey=PrivateGitHubBranch,ParameterValue=${PRIVATE_GITHUB_BRANCH} \
+ParameterKey=PrivateGitHubOwner,ParameterValue=${PRIVATE_GITHUB_OWNER} \
+ParameterKey=PrivateGitHubRepo,ParameterValue=${PRIVATE_GITHUB_REPO} \
+ParameterKey=PrivateGitHubToken,ParameterValue=${GITHUB_TOKEN_SECRET_NAME} \
 ParameterKey=CodeBuildLambdaVpc,ParameterValue=${CODEBUILD_VPC_ID} \
 ParameterKey=CodeBuildLambdaSubnet,ParameterValue=${CODEBUILD_SUBNET_ID1}\\,${CODEBUILD_SUBNET_ID2} \
 --capabilities CAPABILITY_IAM
@@ -143,13 +144,12 @@ ParameterKey=CodeBuildLambdaSubnet,ParameterValue=${CODEBUILD_SUBNET_ID1}\\,${CO
 aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].StackStatus"
 aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
 # After a successful stack deployment, the status changes from `CREATE_IN_PROGRESS` to `CREATE_COMPLETE`.
-
 ```
 
 ## Post-Deployment
-We are using a token-based webhook to connect from the private GitHub repository containing the public package repository request file to CodePipeline. The webhook token ensures that POST requests sent to the payload URL originate from your private repository. When you set a token, you will receive the X-Hub-Signature and X-Hub-Signature-256 headers in the webhook POST request.
+We are using a token-based webhook to connect from the private GitHub repository (containing the public package repository request CSV file) to CodePipeline. The webhook token ensures that POST requests sent to the payload URL originate from your private repository. When you set a token, you will receive the X-Hub-Signature and X-Hub-Signature-256 headers in the webhook POST request.
 
-With your webhook in place, you are now ready to deploy and launch your SageMaker Studio environment. From your SageMaker Studio environment, you will pull the current version of the public repository request CSV file from your private GitHub repository, append the desired additional public repositories to the request record, then push the updated request file back to the private repository. This will trigger CodePipeline execution so the external package repository can be scanned for InfoSec approval then made available as a private internal package. Please continue to [Testing and Validation](../documentation/testing-and-validation.md) for step-by-step guidance.
+With your webhook in place, you are now ready to deploy and launch your SageMaker Studio environment. From your SageMaker Studio environment, you will pull the current version of the public package repository request CSV file from your private GitHub repository, append the desired additional public repositories to the request record, then push the updated request file back to the private repository. This will trigger CodePipeline execution so the external package repository can be scanned for InfoSec approval then made available as a private internal package. Please continue to [Testing and Validation](../documentation/testing-and-validation.md) for step-by-step guidance.
 
 ## Testing and Validation
 see [Testing and Validation](../documentation/testing-and-validation.md)
