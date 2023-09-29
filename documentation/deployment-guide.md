@@ -51,7 +51,7 @@ Navigate to the external package repository and note the following:
 
 ❗ The external public package repository configuration details and corresponding CloudFormation parameters can be extracted as part of an automated CSV request file workflow developed separately.
 
-#### Optional - Run Security Scan on the CloudFormation Template
+#### (OPTIONAL) Run Security Scan on the CloudFormation Template
 If you would like to run a security scan on the CloudFormation template using [`cfn_nag`](https://github.com/stelligent/cfn_nag) (recommended), you have to install `cfn_nag`:
 ```sh
 brew install ruby brew-gem
