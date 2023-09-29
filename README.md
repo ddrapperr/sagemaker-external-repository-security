@@ -40,7 +40,7 @@ The CodePipeline _Pull_Internal_Repository_ source action executes based on the 
 Centralized Internet egress occurs through a [NAT Gateway (NGW)](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html) attached to the egress [Virtual Private Cloud (VPC)](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/vpc-tkv.html) in the Customer Networking Account, reducing the cost associated with a distributed model where NGWs are deployed in every spoke VPC. [The Elastic IP (EIP)](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html) of the NGW provides customers with a single IP address that they can include in their allow-list for ingress into other external networks.
 
 **5 – Automated Security Scanning**  
-A CodeBuild project executes [CodeGuru Security security and quality scans](https://docs.aws.amazon.com/codeguru/latest/security-ug/what-is-codeguru-security.html) in the _Security_Scan_Notify_ security test stage. 
+A CodeBuild project executes [CodeGuru Security security and quality scans](https://docs.aws.amazon.com/codeguru/latest/security-ug/how-codeguru-security-works.html) in the _Security_Scan_Notify_ security test stage. 
 
 **6, 7 – Security Results and Private Package Repository Management**  
 If the security scans return lower than medium severities, the _Security_Scan_Notify_ stage publishes a new _Latest_ package version to the private internal CodeArtifact package repository that was created during the initial solution deployment. An [Amazon Simple Notification Service](https://docs.aws.amazon.com/sns/latest/dg/welcome.html) topic is used to email the results, positive or negative, to the requesting data scientist.
