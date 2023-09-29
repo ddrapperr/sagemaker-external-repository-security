@@ -71,10 +71,9 @@ The following section provides instructions for deploying the paramterized [exte
 The stack (`external-repo-codeartifact.yaml`) provisions the following primary resources:
 1. CodePipeline Pipeline to orchestrate solution workflow.
 2. CodePipeline Artifact Bucket and KMS Key to securely store compressed stage input and output artifacts.
-3. CodePipeline Source Stage _GitHub_Internal_Repository_Pull_ to establish GitHub Webhook and retrieve filtered source changes.
+3. CodePipeline Source Action _GitHub_Internal_Repository_Pull_ to establish GitHub Webhook and retrieve filtered source changes.
 4. CodePipeline Build Stage _Clone_External_Repository_ to clone external package repository.
-5. CodePipeline Build Stage _Security_Scans_ to execute third-party agent-based static application security testing, software composition analysis, dynamic code analysis, and image vulnerability scans.
-6. CodePipeline Build Stage _CodeArtifact_Internal_Repository_Push_ to push InfoSec validated external package to internal private CodeArtifact repository (assuming acceptable severity findings).
+5. CodePipeline Build Stage _Security_Scan_Notify_ to execute CodeGuru Security security and quality scans, push InfoSec validated external packages to internal private CodeArtifact repository (assuming acceptable severity findings), and notify requesting data scientist of results.
 
 CloudFormation prepopulates stack parameters with the default values provided in the template. To provide alternative input values, you can specify parameters via `ParameterKey=<ParameterKey>,ParameterValue=<Value>` pairs in the `aws cloudformation create-stack` call. 
 
