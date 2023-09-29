@@ -23,12 +23,13 @@ Metadata:
         Parameters:
           - ArtifactStoreBucket
           - CodePipelineName
+          - SNSEmail
       - Label:
           default: Git Repository Settings
         Parameters:
-          - GitHubBranch
-          - GitHubOwner
-          - GitHubRepo
+          - PrivateGitHubBranch
+          - PrivateGitHubOwner
+          - PrivateGitHubRepo
           - GitHubToken
       - Label:
           default: Network Configuration
@@ -40,11 +41,13 @@ Metadata:
         default: S3 Bucket Containing Lambda Handler, Lambda Data Loader, and Lex Deployment Packages, along with Customer FAQ and Mortgage Application example documents.
       CodePipelineName:
         default: CodePipeline Name
-      GitHubBranch:
-        default: GitHub Branch
-      GitHubOwner:
+      SNSEmail:
+        default: SNS Email
+      PrivateGitHubBranch:
+        default: Private GitHub Branch
+      PrivateGitHubOwner:
         default: GitHub Repo Owner
-      GitHubRepo:
+      PrivateGitHubRepo:
         default: GitHub Repo Name
       GitHubToken:
         default: GitHub PAT Secrets Manager ARN
@@ -61,16 +64,20 @@ Parameters:
   CodePipelineName:
     Description: Name for CodePipeline.
     Type: String
-    Default: external-package-pipeline
-  GitHubBranch:
-    Description: GitHub Branch to clone.
+    Default: <YOUR-EXTERNAL-PACKAGE-REPO-PIPELINE-NAME>
+  SNSEmail:
+    Description: SNS Email.
+    Type: String
+    Default: <YOUR-SNS-EMAIL>
+  PrivateGitHubBranch:
+    Description: Private GitHub Branch for request file.
     Type: String
     Default: <YOUR-EXTERNAL-PACKAGE-BRANCH>
-  GitHubOwner:
+  PrivateGitHubOwner:
     Description: GitHub owner for the cloned repository.
     Type: String
     Default: <YOUR-EXTERNAL-PACKAGE-OWNER>
-  GitHubRepo:
+  PrivateGitHubRepo:
     Description: GitHub Repo to clone.   
     Type: String
     Default: <YOUR-EXTERNAL-PACKAGE-REPO>
@@ -89,6 +96,18 @@ Parameters:
     Default: '<YOUR-PRIVATE-SUBNET-ID1>, <YOUR-PRIVATE-SUBNET-ID2>'
 
 Resources:
+  #
+  SNSTopic:
+    Type: AWS::SNS::Topic
+
+  #
+  SNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties: 
+      Endpoint: !Ref SNSEmail
+      Protocol: email
+      TopicArn: !Ref SNSTopic
+
   # Create Domain
   ExampleDomain:
     Type: AWS::CodeArtifact::Domain
@@ -179,7 +198,7 @@ Resources:
           Subnets: !Ref CodeBuildLambdaSubnet
         EncryptionKey: !GetAtt KMSKey.Arn
         Environment:
-          Image: aws/codebuild/standard:2.0
+          Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
           Type: LINUX_CONTAINER
           ComputeType: BUILD_GENERAL1_SMALL
         QueuedTimeoutInMinutes: 60
@@ -191,15 +210,23 @@ Resources:
               build:
                 commands:
                   - echo "=======================Start-Deployment============================="
-                  - echo "Cloning compressed external package repository on branch $GitHubBranch"
-                  - wget https://github.com/$GitHubOwner/$GitHubRepo/archive/$GitHubBranch.tar.gz
-                  - ls
+                  - echo "Cloning compressed external package repository"
+                  - IFS=$' \t\r\n'
+                  - ls -al
+                  - tail -1 request.csv > list.txt
+                  - export EXTERNAL_PACKAGE_NAME=$(cut -d "," -f 1 list.txt)
+                  - echo $EXTERNAL_PACKAGE_NAME
+                  - export EXTERNAL_PACKAGE_URL=$(cut -d "," -f 2 list.txt)
+                  - echo $EXTERNAL_PACKAGE_URL
+                  - curl $EXTERNAL_PACKAGE_URL -L -o $EXTERNAL_PACKAGE_NAME.zip
+                  - ls -al
                   - echo "=======================End-Deployment============================="
             artifacts:
               files:
-                - $GitHubBranch.tar.gz
+                - security-scan.py
+                - $EXTERNAL_PACKAGE_NAME.zip
           Type: CODEPIPELINE
-        TimeoutInMinutes: 14
+        TimeoutInMinutes: 30
 
   # CodeBuild Security Scan Build Project
   SecurityScanCodeBuild:
@@ -213,45 +240,7 @@ Resources:
           Subnets: !Ref CodeBuildLambdaSubnet
         EncryptionKey: !GetAtt KMSKey.Arn
         Environment:
-          Image: aws/codebuild/standard:2.0
-          Type: LINUX_CONTAINER
-          ComputeType: BUILD_GENERAL1_SMALL
-        QueuedTimeoutInMinutes: 60
-        ServiceRole: !GetAtt CodeSuiteRole.Arn
-        Source:
-          BuildSpec: |
-            version: 0.2
-            phases:
-              build:
-                commands:
-                  - echo "=======================Start-Deployment============================="
-                  - echo "Copying the zipped and KMS encrypted external repository input artifact to working directory"
-                  - ls -al
-                  - echo "The security scanning software is not included in this solition because of required software licensing. \
-                      Up to this point, the solution performs the initial external repository ingest, against which you can perform subsequent security scans. \
-                      In this case, the solution is expanded upon using a CodePipeline security test stage that receives the output artifact from our CodeBuild build stage. \
-                      The security stage includes two actions for both the static analysis (Java API wrapper) and software composition analysis (agent-based) build projects. \
-                      Security test stage results are passed as an output artifact so they can be used an input artifact in the next and final build stage."
-                  - echo "=======================End-Deployment============================="
-            artifacts:
-              files:
-                - $GitHubBranch.tar.gz
-          Type: CODEPIPELINE
-        TimeoutInMinutes: 14
-
-  # CodeBuild Repo Push Build Project
-  RepoPushCodeBuild:
-      Type: AWS::CodeBuild::Project
-      Properties:
-        Artifacts:
-          Type: CODEPIPELINE
-        VpcConfig:
-          VpcId: !Ref CodeBuildLambdaVpc
-          SecurityGroupIds: [!Ref CodeBuildSecurityGroup]
-          Subnets: !Ref CodeBuildLambdaSubnet
-        EncryptionKey: !GetAtt KMSKey.Arn
-        Environment:
-          Image: aws/codebuild/standard:2.0
+          Image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
           Type: LINUX_CONTAINER
           ComputeType: BUILD_GENERAL1_SMALL
         QueuedTimeoutInMinutes: 60
@@ -262,29 +251,35 @@ Resources:
             phases:
               install:
                   runtime-versions:
-                      python: 3.7
+                      python: 3.9
               pre_build:
                   commands:
                     - pip3 install awscli --upgrade --user
+                    - pip3 install boto3 --upgrade
               build:
-                  commands:
-                    - echo "=======================Start-Deployment============================="
-                    - echo "Copying the security scan results and external package reposiutory as an input artifact to working directory"
-                    - ls -al
-                    - echo $((RANDOM))
-                    - export file=$((RANDOM))
-                    - echo $file
-                    - echo $GitHubBranch.tar.gz
-                    - echo $file-$GitHubBranch.tar.gz
-                    - mv $GitHubBranch.tar.gz $file-$GitHubBranch.tar.gz
-                    - export ASSET_SHA256=$(sha256sum $file-$GitHubBranch.tar.gz | awk '{print $1;}')
-                    - aws codeartifact publish-package-version --domain $ExampleDomain --repository $InternalRepository --format generic --namespace new-namespace --package new-package --package-version Latest --asset-content $file-$GitHubBranch.tar.gz --asset-name $file-$GitHubBranch.tar.gz --asset-sha256 $ASSET_SHA256 --unfinished
-                    - echo "=======================End-Deployment============================="
+                commands:
+                  - echo "=======================Start-Deployment============================="
+                  - echo "Security scanning external package repository"
+                  - ls -al
+                  - export EXTERNAL_PACKAGE_FILE_NAME=$(find . -type f -name "*.zip" -printf "%f\n")
+                  - echo $EXTERNAL_PACKAGE_FILE_NAME
+                  - export EXTERNAL_PACKAGE_NAME=${EXTERNAL_PACKAGE_FILE_NAME%.*}
+                  - echo $EXTERNAL_PACKAGE_NAME
+                  - export RANDOM=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
+                  - echo $RANDOM
+                  - export UNIQUE_PACKAGE_FILE_NAME=$RANDOM-$EXTERNAL_PACKAGE_FILE_NAME
+                  - mv $EXTERNAL_PACKAGE_FILE_NAME $UNIQUE_PACKAGE_FILE_NAME
+                  - export ASSET_SHA256=$(sha256sum $UNIQUE_PACKAGE_FILE_NAME | awk '{print $1;}')
+                  - echo $ASSET_SHA256
+                  - python3 codeguru-security-scan.py
+                  - export PACKAGE=$(aws codeartifact publish-package-version --domain $ExampleDomain --repository $InternalRepository --format generic --namespace $EXTERNAL_PACKAGE_NAME --package $EXTERNAL_PACKAGE_NAME --package-version Latest --asset-content $UNIQUE_PACKAGE_FILE_NAME --asset-name $UNIQUE_PACKAGE_FILE_NAME --asset-sha256 $ASSET_SHA256 --unfinished)
+                  - aws sns publish --topic-arn $SNSTopic --subject "InfoSec Approved: $EXTERNAL_PACKAGE_NAME" --message $PACKAGE
+                  - echo "=======================End-Deployment============================="
             artifacts:
               files:
-                - $file-$GitHubBranch.tar.gz
+                - $UNIQUE_PACKAGE_FILE_NAME
           Type: CODEPIPELINE
-        TimeoutInMinutes: 14
+        TimeoutInMinutes: 30
 
   # CodePipeline to Orchestrate External Package Repo InfoSec Validation Workflow
   CodePipeline:
@@ -301,7 +296,7 @@ Resources:
       RoleArn: !GetAtt CodeSuiteRole.Arn
       Stages:
       # Source Action for Internal Private GitHub Repo
-      - Name: 'Pull_Internal_GitHub_Repository'
+      - Name: 'Pull_Internal_Repository'
         Actions:
         - Name: 'Source'
           InputArtifacts: []
@@ -313,9 +308,9 @@ Resources:
           OutputArtifacts:
           - Name: RepoToClone
           Configuration:
-            Owner: !Ref GitHubOwner
-            Repo: !Ref GitHubRepo
-            Branch: !Ref GitHubBranch
+            Owner: !Ref PrivateGitHubOwner
+            Repo: !Ref PrivateGitHubRepo
+            Branch: !Ref PrivateGitHubBranch
             PollForSourceChanges: false
             OAuthToken: !Sub "{{resolve:secretsmanager:${GitHubToken}}}"
           RunOrder: 1
@@ -333,21 +328,7 @@ Resources:
           OutputArtifacts:
             - Name: ClonedRepo
           Configuration:
-            ProjectName: !Ref RepoCloneCodeBuild
-            EnvironmentVariables: !Sub |
-              [{
-                "name": "GitHubBranch",
-                "type": "PLAINTEXT",
-                "value": "${GitHubBranch}"
-              },{
-                "name": "GitHubRepo",
-                "type": "PLAINTEXT",
-                "value": "${GitHubRepo}"
-              },{
-                "name": "GitHubOwner",
-                "type": "PLAINTEXT",
-                "value": "${GitHubOwner}"
-              }]         
+            ProjectName: !Ref RepoCloneCodeBuild      
           RunOrder: 1
      # CodeBuild Project to Perform Security Scans Using External Providers
       - Name: 'Security_Scan_External_Package_Repository'
@@ -366,32 +347,6 @@ Resources:
             ProjectName: !Ref SecurityScanCodeBuild
             EnvironmentVariables: !Sub |
               [{
-                "name": "GitHubBranch",
-                "type": "PLAINTEXT",
-                "value": "${GitHubBranch}"
-              }]   
-          RunOrder: 1
-      # CodeBuild Project to Push Validated External Repo to Internal Private Repo
-      - Name: 'Push_CodeArtifact_Internal_Package_Repository'
-        Actions:
-        - Name: 'CodeBuild_Push'
-          ActionTypeId:
-            Category: Build
-            Owner: AWS
-            Version: 1
-            Provider: CodeBuild
-          InputArtifacts:
-            - Name: SecurityScan
-          OutputArtifacts:
-            - Name: ApprovedRepo
-          Configuration:
-            ProjectName: !Ref RepoPushCodeBuild
-            EnvironmentVariables: !Sub |
-              [{
-                "name": "GitHubBranch",
-                "type": "PLAINTEXT",
-                "value": "${GitHubBranch}"
-              },{
                 "name": "ExampleDomain",
                 "type": "PLAINTEXT",
                 "value": "${ExampleDomain.Name}"
@@ -399,6 +354,10 @@ Resources:
                 "name": "InternalRepository",
                 "type": "PLAINTEXT",
                 "value": "${InternalRepository.Name}"
+              },{
+                "name": "SNSTopic",
+                "type": "PLAINTEXT",
+                "value": "${SNSTopic}"
               }]
           RunOrder: 1
 
@@ -519,6 +478,7 @@ Resources:
           - Effect: Allow
             Action:
              - "codebuild:*"
+             - "codeguru-security:*"
             Resource: '*'
           - Effect: Allow
             Action:
@@ -528,6 +488,10 @@ Resources:
              - 'kms:GenerateDataKey*'
              - 'kms:DescribeKey'
             Resource: "*"
+          - Effect: Allow
+            Action:
+             - "sns:publish"
+            Resource: !Ref SNSTopic
           - Effect: Allow
             Action:
              - 'secretsmanager:GetSecretValue'
