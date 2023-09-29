@@ -14,7 +14,7 @@ To deploy this solution, your IAM user/role or service role must have permission
 
 You must also have [AWS CLI](https://aws.amazon.com/cli/) installed. For instructions on installing AWS CLI, please see [Installing, updating, and uninstalling the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html).
 
-### Fork and Clone [_External Package Repository Security: Amazon SageMaker and AWS Code Services](https://github.com/aws-samples/sagemaker-external-repository-security/tree/main)
+### Fork and Clone [External Package Repository Security: Amazon SageMaker and AWS Code Services](https://github.com/aws-samples/sagemaker-external-repository-security/tree/main)
 Follow [GitHub's instructions](https://docs.github.com/en/get-started/quickstart/fork-a-repo?tool=webui&platform=mac) to fork this repository. This creates a copy of the repository that is disconnected from the original codebase, so you can make the appropriate modifications.
 
 Take note of your forked repository URL and use it to clone the repository:
