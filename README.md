@@ -28,6 +28,11 @@ The data scientist pulls the current version of the public package repository re
 
 <p align="center">
   <img src="img/package-request-file.png">
+  <em>Diagram 1: External Package Repository Security Scanning Using AWS CodePipeline, AWS CodeBuild, Amazon CodeGuru Securitry, and AWS CodeArtifact</em>
+</p>
+
+<p align="center">
+  <img src="img/package-request-file.png">
   <em>Figure 1: Public Package Repository Request CSV File</em>
 </p>
 
