@@ -26,6 +26,11 @@ This solution covers three main topics:
 **1 – Data Scientist Self-Service Model**  
 The data scientist pulls the current version of the public package repository request CSV file from the private GitHub repository, appends desired additional public package repositories to the request record, then pushes the updated request file back to the private repository.
 
+<p align="center">
+  <img src="img/package-request-file.png">
+  <em>Figure 1: Public Package Repository Request CSV File</em>
+</p>
+
 **2, 3 – External Package Repository Ingest**  
 The CodePipeline _Pull_Internal_Repository_ source stage executes based on the request file check-in to the private GitHub repository, which triggers AWS CodePipeline execution via a webhook secured by a personal access token stored in [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html). The subsequent _Clone_External_Repository_ build stage consists of an AWS CodeBuild project that parses the request file, identifies the public package repository to ingest, then executes _git clone_ on the remote repository. The remote public package repository is stored as a build stage output artifact in [Amazon Simple Storage Service (S3)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html) and later used as the security test stage input artifact.
 
