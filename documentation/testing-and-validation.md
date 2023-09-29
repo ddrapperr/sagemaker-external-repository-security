@@ -67,18 +67,18 @@ CodePipeline is configured with a source action that triggers based on the data 
   <em>Diagram 7: CodePipeline Execution Status</em>
 </p>
 
-CodeGuru Security performs security and quality scans on the public package repository to detect vulnerabilities and return findings. The findings include information about security issues in the public package repository code, where the vulnerabilities are, and suggestions for how to remediate them. If the finding includes a code change, CodeGuru Security highlights the vulnerable lines of code to remove and suggests inline code fixes as replacements. For more information, see [Working with findings](https://docs.aws.amazon.com/codeguru/latest/security-ug/working-with-findings.html).
+CodeGuru Security performs security and quality scans on the public package repository to detect vulnerabilities and return findings. The findings include information about security issues in the public package repository code, the vulnerabilities' locations in the codebase, and suggestions for how to remediate them. If the finding includes a code change, CodeGuru Security highlights the vulnerable lines of code to remove and suggests inline code fixes as replacements. For more information, see [Working with findings](https://docs.aws.amazon.com/codeguru/latest/security-ug/working-with-findings.html).
 
-The CodeGuru Security Dashboard provides metrics to track the security posture of your public package repositories, including open critical findings, severity distribution of findings and trends over time for each resource. CodeGuru Security tracks the vulnerabilities and trends across multiple revisions of the same resource using the scan name provided when a scan is created:
+The CodeGuru Security Dashboard provides metrics to track the security posture of your public package repositories, including open critical findings, severity distribution of findings, and trends over time for each resource. CodeGuru Security tracks the vulnerabilities and trends across multiple revisions of the same resource using the scan name provided when a scan is created:
 
 <p align="center">
   <img src="../img/codeguru.png">
   <em>Diagram 8: Amazon CodeGuru Security - Security and Quality Scan Findings</em>
 </p>
 
-The security stage output is analyzed as part of the CodePipeline orchestration. If the security scans return severity findings greater than or equal to medium, then [stop-pipeline-execution](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/codepipeline/stop-pipeline-execution.html) is used to place CodePipeline into a _Stopping_ state and a [CodePipeline notification rule](https://docs.aws.amazon.com/codepipeline/latest/userguide/notification-rule-create.html) uses Amazon Simple Email Service (SES) to email the negative results to the requesting data scientist.
+The security test stage output is analyzed as part of the CodePipeline orchestration. If the security scans return severity findings greater than or equal to medium, then [CodeBuild stop build](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/codebuild/client/stop_build.html) is used to stop the build process, and an Amazon Simple Notification (SNS) topic is used to email the negative results to the requesting data scientist.
 
-If the security scans return lower than medium severities, CodeBuild updates the private CodeArtifact (or GitHub) package repository with a new version of the InfoSec approved external package. CodeBuild then performs a _git pull_ of the current results CSV file, updates the file with the outcome of the latest request, then executes a _git push_ of the updated results file to the private repository. A CodeBuild notification rule then emails the positive results to the requesting data scientist.
+If the security scans return lower than medium severities, CodeBuild updates the private CodeArtifact (or GitHub) package repository with a new version of the InfoSec approved external package and the SNS topic is used to email the positive results to the requesting data scientist.
 
 <p align="center">
   <img src="../design/codepipeline-overview.svg">
@@ -94,12 +94,12 @@ You can view the packages published to the CodeArtifact private internal package
 
 ## Use InfoSec Approved Private Package Repository with SageMaker Studio Notebook
 
-Assuming the data scientist's external package repository has been approved by InfoSec, they can use their SageMaker Studio Notebook to install the validated external packages using the newly-created private repository package - Please see [Download package version assets](https://docs.aws.amazon.com/codeartifact/latest/ug/download-assets.html) from the AWS CodeArtifact User Guide:
+Assuming the data scientist's external package repository (e.g., NumPy) has been approved by InfoSec, they can use their SageMaker Studio Notebook to install the validated external packages using the newly-created private repository package - Please see [Download package version assets](https://docs.aws.amazon.com/codeartifact/latest/ug/download-assets.html) from the AWS CodeArtifact User Guide:
 
 ```sh
 aws codeartifact get-package-version-asset --domain codeartifact-domain \
 --repository codeartifact-internalrepository --format generic --namespace new-namespace \
---package new-package --package-version Latest --asset main.tar.gz main.tar.gz
+--package new-package --package-version Latest --asset numpy.zip numpy.zip
 ```
 
 <p align="center">
