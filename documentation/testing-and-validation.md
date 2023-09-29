@@ -42,9 +42,10 @@ Run the following commands in the terminal to clone your private GitHub reposito
 git init
 git config --global user.email "email@example.com"
 git config --global user.name "username"
-git remote add origin <https://github.com/<username>/<repo>.git)>
-git clone <YOUR-FORKED-REPOSITORY-URL> # ex: https://github.com/aws-samples/sagemaker-external-repository-security.git
-cd <local-repo>
+# If not already forked, fork the remote repository (https://github.com/aws-samples/sagemaker-external-repository-security.git)
+git remote add origin <YOUR-FORKED-REPOSITORY-URL> 
+git clone <YOUR-FORKED-REPOSITORY-URL> 
+cd <local-repo-name>
 git checkout <branch>
 vi <public-package-request.csv>
 # Append your public package name and zip URL to public-repo-request-file.csv # ex: numpy,https://github.com/numpy/numpy/archive/refs/heads/main.zip
