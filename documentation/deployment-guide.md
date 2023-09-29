@@ -77,7 +77,7 @@ The stack (`external-repo-codeartifact.yaml`) provisions the following primary r
 
 CloudFormation prepopulates stack parameters with the default values provided in the template. To provide alternative input values, you can specify parameters via `ParameterKey=<ParameterKey>,ParameterValue=<Value>` pairs in the `aws cloudformation create-stack` call. 
 
-❗You are required to specify valid CloudFormation parameters for your prerequisite AWS resources (e.g., VPC, subntes, S3 bucket) and GitHub environment settings (e.g., GitHubBranch, GitHubOwner, GitHubRepo, GitHubToken) to be used for stack deployment. Set the corresponding CloudFormation parameters to the names, values, and resource IDs of your existing resources:
+❗You are required to specify valid CloudFormation parameters for your prerequisite AWS resources (e.g., VPC, subnets, S3 bucket) and GitHub environment settings (e.g., GitHubBranch, GitHubOwner, GitHubRepo, GitHubToken) to be used for stack deployment. Set the corresponding CloudFormation parameters to the names, values, and resource IDs of your existing resources:
 
 ```sh
 # Provide your own parameter values for CloudFormation stack and CodePipeline pipeline names
