@@ -1,0 +1,6 @@
+﻿PublicPackageRepoName,PublicPackageRepoUrl
+langchain,https://github.com/langchain-ai/langchain/archive/refs/heads/master.zip
+pytorch,https://github.com/pytorch/pytorch/archive/refs/heads/main.zip
+xgboost,https://github.com/dmlc/xgboost/archive/refs/heads/master.zip
+numpy,https://github.com/numpy/numpy/archive/refs/heads/main.zip
+sagemaker-external-repo-access,https://github.com/aws-samples/sagemaker-external-repository-security/archive/refs/heads/main.zip
