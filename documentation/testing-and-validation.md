@@ -43,13 +43,13 @@ git init
 git config --global user.email "email@example.com"
 git config --global user.name "username"
 git remote add origin <https://github.com/<username>/<repo>.git)>
-git clone <https://github.com/<username>/<repo>.git)> <local-repo>
+git clone <YOUR-FORKED-REPOSITORY-URL> # ex: https://github.com/aws-samples/sagemaker-external-repository-security.git
 cd <local-repo>
 git checkout <branch>
-vi <public-repo-request-file.csv>
-# Append your public package name and zip URL to public-repo-request-file.csv 
-git add <public-repo-request-file.csv>
-git commit -m "modified <public-repo-request-file.csv>"
+vi <public-package-request.csv>
+# Append your public package name and zip URL to public-repo-request-file.csv # ex: numpy,https://github.com/numpy/numpy/archive/refs/heads/main.zip
+git add <public-package-request.csv>
+git commit -m "Update public-package-request.csv with <PACKAGE-NAME>"
 git push -u
 ```
 
