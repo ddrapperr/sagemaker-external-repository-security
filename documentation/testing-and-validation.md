@@ -92,6 +92,13 @@ You can view the packages published to the CodeArtifact private internal package
   <em>Diagram 10: CodeArtifact Private Package Version</em>
 </p>
 
+<p align="center">
+  <img src="../img/codeartifact-package.png" width=50% height=50%>
+</p>
+<p align="center">
+  <em> Diagram 11: SageMaker Studio Private Package </em>
+</p>
+
 ## Use InfoSec Approved Private Package Repository with SageMaker Studio Notebook
 
 Assuming the data scientist's external package repository (e.g., NumPy) has been approved by InfoSec, they can use their SageMaker Studio Notebook to install the validated external packages using the newly-created private repository package - Please see [Download package version assets](https://docs.aws.amazon.com/codeartifact/latest/ug/download-assets.html) from the AWS CodeArtifact User Guide:
@@ -101,14 +108,6 @@ aws codeartifact get-package-version-asset --domain codeartifact-domain \
 --repository codeartifact-internalrepository --format generic --namespace new-namespace \
 --package new-package --package-version Latest --asset numpy.zip numpy.zip
 ```
-
-<p align="center">
-  <img src="../img/codeartifact-package.png" width=50% height=50%>
-</p>
-<p align="center">
-  <em> Diagram 11: SageMaker Studio Private Package </em>
-</p>
-
 
 ---
 
